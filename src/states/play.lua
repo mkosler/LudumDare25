@@ -7,7 +7,9 @@ local maps = require 'src.maps'
 local level
 
 function Play:enter(prev)
-  level = Level(maps[1])
+  local ranger = Ranger:new(200, 100)
+  print(ranger.x, ranger.hp)
+  level = Level(maps[1], Bag{Ranger:new(100, 100), Knight:new(100, 130), Berzerker:new(100, 150), Mage:new(100, 170)})
   love.graphics.setBackgroundColor(175, 238, 238)
 end
 

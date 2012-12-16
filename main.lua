@@ -1,6 +1,7 @@
 -- Libraries
 GS = require 'lib.hump.gamestate'
-Class = require 'lib.hump.class'
+require 'lib.middleclass'
+--Class = require 'lib.hump.class'
 
 --require 'assets'
 

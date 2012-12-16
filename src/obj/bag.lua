@@ -1,8 +1,7 @@
-Bag = Class{
-  function(self)
-    self.objects = {}
-  end
-}
+Bag = class('Bag')
+function Bag:initialize(tbl)
+  self.objects = tbl or {}
+end
 
 function Bag:add(o)
   table.insert(self.objects, o)

@@ -3,14 +3,13 @@ require 'src.obj.bag'
 local blockImage        = love.graphics.newImage('assets/block.png')
 local collideBlockImage = love.graphics.newImage('assets/collideBlock.png')
 
-local Block = Class{
-  function(self, x, y, coll)
-    self.x = x
-    self.y = y
-    self.collidable = coll
-    self.image = coll and blockImage or collideBlockImage
-  end
-}
+local Block = class('Block')
+function Block:initialize(x, y, coll)
+  self.x = x
+  self.y = y
+  self.collidable = coll
+  self.image = coll and blockImage or collideBlockImage
+end
 
 function Block:draw()
   love.graphics.draw(self.image, self.x, self.y)
@@ -46,12 +45,11 @@ local function printMatrix(t)
   print(str)
 end
 
-Level = Class{
-  function(self, map)
-    self.map = buildMap(map)
-    self.enemies = Bag()
-  end
-}
+Level = class('Level')
+function Level:initialize(map, enemies)
+  self.map = buildMap(map)
+  self.enemies = enemies
+end
 
 local function getBox(o)
   return { x = o.x, y = o.y, w = o.image:getWidth(), h = o.image:getHeight() }
@@ -67,12 +65,28 @@ local function haveCollided(a, b)
     (box1.y + box1.h) > box2.y
 end
 
+local function resolve(v1, v2)
+  local x, y
+  if v1.velocity.x > 0 then
+    x = v2.x - v1.image:getWidth()
+  elseif v1.velocity.x < 0 then
+    x = v2.x + v2.image:getWidth()
+  end
+  if v1.velocity.y > 0 then
+    y = v2.y - v1.image:getHeight()
+  elseif v1.velocity.y < 0 then
+    y = v2.y + v2.image:getHeight()
+  end
+  return x, y
+end
+
 function Level:update(dt)
   self.enemies:update(dt)
 
-  for _,v1 in pairs(self.enemies) do
+  for _,v1 in pairs(self.enemies.objects) do
     for _,v2 in pairs(self.map) do
       if v2.collidable and haveCollided(v1, v2) then
+        v1.x, v1.y = resolve(v1, v2)
       end
     end
   end

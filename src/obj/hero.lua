@@ -1,13 +1,20 @@
-local Hero = Class{
-  function(self, x, y, img)
-    self.x = x
-    self.y = y
-    self.image = img
-  end
-}
+local Hero = class('Hero')
+function Hero:initialize(x, y, img)
+  self.x = x
+  self.y = y
+  self.image = img
+  self.velocity = {
+    x = 5,
+    y = 0
+  }
+end
 
-function Hero:applyDamage(dmg)
-  self.hp = self.hp - (dmg * self.armor)
+local GRAVITY = 1.0
+
+function Hero:update(dt)
+  self.velocity.y = self.velocity.y + GRAVITY
+  self.x = self.x + (self.velocity.x * dt)
+  self.y = self.y + (self.velocity.y * dt)
 end
 
 function Hero:draw()
@@ -19,38 +26,30 @@ local berzekerImage = love.graphics.newImage('assets/berserker.png')
 local knightImage   = love.graphics.newImage('assets/knight.png')
 local mageImage     = love.graphics.newImage('assets/mage.png')
 
-Ranger = Class{
-  inherits = Hero,
-  function(self, x, y)
-    self.hp = 75
-    self.armor = 0.75
-    Hero.construct(self, x, y, rangerImage)
-  end
-}
+Ranger    = class('Ranger', Hero)
+function Ranger:initialize(x, y)
+  Hero.initialize(self, x, y, rangerImage)
+  self.hp = 75
+  self.armor = 0.75
+end
 
-Berzerker = Class{
-  inherits = Hero,
-  function(self, x, y)
-    self.hp = 150
-    self.armor = 0.85
-    Hero.construct(self, x, y, berzekerImage)
-  end
-}
+Berzerker = class('Berzerker', Hero)
+function Berzerker:initialize(x, y)
+  Hero.initialize(self, x, y, berzekerImage)
+  self.hp = 150
+  self.armor = 0.85
+end
 
-Knight = Class{
-  inherits = Hero,
-  function(self, x, y)
-    self.hp = 100
-    self.armor = 0.5
-    Hero.construct(self, x, y, knightImage)
-  end
-}
+Knight    = class('Knight', Hero)
+function Knight:initialize(x, y)
+  Hero.initialize(self, x, y, knightImage)
+  self.hp = 100
+  self.armor = 0.5
+end
 
-Mage = Class{
-  inherits = Hero,
-  function(self, x, y)
-    self.hp = 50
-    self.armor = 1.0
-    Hero.construct(self, x, y, mageImage)
-  end
-}
+Mage      = class('Mage', Hero)
+function Mage:initialize(x, y)
+  Hero.initialize(self, x, y, mageImage)
+  self.hp = 50
+  self.armor = 1.0
+end
