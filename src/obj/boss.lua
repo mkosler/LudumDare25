@@ -3,6 +3,7 @@ local bossImage = love.graphics.newImage('assets/boss.png')
 Boss = class('Boss')
 function Boss:initialize(x, y, keys)
   self.box = HC:addRectangle(x, y, bossImage:getWidth(), bossImage:getHeight())
+  HC:addToGroup('boss', self.box)
   HC:addToGroup('redirect', self.box)
   self.box.parent = self
   self.name = 'Boss'
@@ -163,6 +164,9 @@ function Boss:callback(dt, o, dx, dy)
       if instanceOf(v, o) then
         self.hp.current = self.hp.current - o.damage
         o.removable = true
+        if instanceOf(Charge, o) then
+          o.parent.timer.count = 0
+        end
       end
     end
   end

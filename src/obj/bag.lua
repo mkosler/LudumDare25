@@ -29,11 +29,23 @@ function Bag:add(o)
     print('Adding to bodies...')
     table.insert(self.bodies, o)
   elseif instanceOf(Attack, o) then
-    print('Adding to missiles...')
+    print('Adding to attacks...')
     table.insert(self.attacks, o)
   else
     print('Adding to objects...')
     table.insert(self.objects, o)
+  end
+end
+
+function Bag:cleanObjects(tbl)
+  for i,v in ipairs(tbl) do
+    if v.removable then
+      local l, t = v.box:bbox()
+      HC:remove(v.box)
+      table.remove(tbl, i)
+      print('Adding dead...')
+      self:add(Dead:new(l, t, v.deadImage))
+    end
   end
 end
 
@@ -61,7 +73,7 @@ function Bag:update(dt)
   self:updateTable(dt, self.attacks)
   self:updateTable(dt, self.bodies)
 
-  self:cleanTable(self.objects)
+  self:cleanObjects(self.objects)
   self:cleanTable(self.attacks)
 end
 

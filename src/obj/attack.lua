@@ -2,7 +2,7 @@ Attack = class('Attack')
 function Attack:initialize(x, y, damage, boss, img)
   self.box = HC:addRectangle(x, y, img:getWidth(), img:getHeight())
   HC:addToGroup('level', self.box)
-  if not boss then HC:addToGroup('hero', self.box) end
+  if boss then HC:addToGroup('boss', self.box) else HC:addToGroup('hero', self.box) end
   HC:setPassive(self.box)
   self.box.parent = self
   self.name = 'Attack'
@@ -53,30 +53,27 @@ end
 
 function Slash:update(dt)
   local l, t, r = self.parent.box:bbox()
+  local _,cY = self.parent.box:center()
   if self.parent.facing == 'left' then
-    self.box:moveTo(l - 1, t)
+    self.box:moveTo(l + (self.image:getWidth() / 2.0) - 1, cY)
   elseif self.parent.facing == 'right' then
-    self.box:moveTo(r + 1, t)
+    self.box:moveTo(r + (self.image:getWidth() / 2.0) + 1, cY)
   end
 
   self.timer.count = self.timer.count + dt
   if self.timer.count < self.timer.delay then return end
 
+  print('Natural Slash death')
   self.removable = true
 end
 
 function Slash:draw()
-  local pL, pT, pR, pB = self.parent.box:bbox()
-  local l, t, r, b = self.box:bbox()
-  print(pL, pT, pR, pB, l, t, r, b, self.parent.facing)
+  local l, t = self.box:bbox()
   if self.parent.facing == 'left' then
     love.graphics.draw(self.image, l, t, 0, -1, 1)
   elseif self.parent.facing == 'right' then
     love.graphics.draw(self.image, l, t)
   end
-end
-
-function Slash:callback(dt, o, dx, dy)
 end
 
 Charge = class('Charge', Attack)
@@ -86,12 +83,43 @@ function Charge:initialize(damage, parent, img)
   self.parent = parent
 end
 
+function Charge:update(dt)
+  local l, t, r = self.parent.box:bbox()
+  local _,cY = self.parent.box:center()
+  if self.parent.facing == 'left' then
+    self.box:moveTo(l + (self.image:getWidth() / 2.0) - 1, cY)
+  elseif self.parent.facing == 'right' then
+    self.box:moveTo(r + (self.image:getWidth() / 2.0) + 1, cY)
+  end
+end
+
 function Charge:draw()
-  print('Inside Charge:draw()...')
-  local l, t, r, b = self.parent.box:bbox()
+  local l, t = self.box:bbox()
   if self.parent.facing == 'left' then
     love.graphics.draw(self.image, l, t, 0, -1, 1)
   elseif self.parent.facing == 'right' then
-    love.graphics.draw(self.image, r, t)
+    love.graphics.draw(self.image, l, t)
   end
+end
+
+Throw = class('Throw', Attack)
+function Throw:initialize(damage, parent, img)
+  local l, t = parent.box:bbox()
+  Attack.initialize(self, l, t, damage, true, img)
+  self.parent = parent
+  self.previous = { cY = 0 }
+end
+
+function Throw:update(dt)
+  local cX, cY = self.parent.box:center()
+  if cY == self.previous.cY then 
+    self.removable = true
+    return
+  end
+
+  self.box:moveTo(cX, cY)
+  self.previous.cY = cY
+end
+
+function Throw:draw()
 end

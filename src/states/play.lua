@@ -9,7 +9,7 @@ local level
 
 local function callback(dt, v1, v2, dx, dy)
   -- Check Hero
-  for _,v in pairs{ Ranger, Berzerker, Knight } do
+  for _,v in pairs{ Ranger, Berzerker, Knight, Dead } do
     if instanceOf(v, v1.parent) then
       v1.parent:callback(dt, v2.parent, dx, dy)
     elseif instanceOf(v, v2.parent) then
@@ -26,10 +26,10 @@ local function callback(dt, v1, v2, dx, dy)
 end
 
 function Play:enter(prev)
-  --level = Level(maps[2], Bag{ Boss:new(20, 100, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Ranger:new(160, 100), Dead:new(160, 200) } )
+  level = Level(maps[2], Bag{ Boss:new(20, 100, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Ranger:new(160, 100), Knight:new(160, 200) } )
   --level = Level(maps[2], Bag{ Boss:new(20, 100, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Ranger:new(160, 100) })
-  --level = Level(maps[3], Bag{ Boss:new(20, 200, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Berzerker:new(160, 200) })
-  level = Level(maps[3], Bag{ Boss:new(20, 200, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }) })
+  --level = Level(maps[3], Bag{ Boss:new(20, 200, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Knight:new(160, 200) })
+  --level = Level(maps[3], Bag{ Boss:new(20, 200, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }) })
   love.graphics.setBackgroundColor(175, 238, 238)
 
   HC:setCallbacks(callback)
