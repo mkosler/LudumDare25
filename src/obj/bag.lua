@@ -92,9 +92,5 @@ function Bag:keyreleased(key, code)
 end
 
 function Bag:cleanUp()
-  self.boss = nil
-  self.objects = nil
-  self.attacks = nil
-  self.bodies = nil
-  self = nil
+  self.boss:cleanUp()
 end

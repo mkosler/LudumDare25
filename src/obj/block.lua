@@ -16,6 +16,10 @@ function Block:draw()
   love.graphics.draw(self.image, l, t)
 end
 
+function Block:cleanUp()
+  HC:remove(self.box)
+end
+
 CollisionBlock = class('CollisionBlock', Block)
 function CollisionBlock:initialize(x, y)
   Block.initialize(self, x, y, blockImage)

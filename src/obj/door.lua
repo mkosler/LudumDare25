@@ -18,3 +18,7 @@ function Door:draw()
   local l, t = self.box:bbox()
   love.graphics.draw(self.image, l, t)
 end
+
+function Door:cleanUp()
+  HC:remove(self.box)
+end

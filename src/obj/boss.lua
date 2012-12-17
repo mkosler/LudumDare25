@@ -189,3 +189,7 @@ function Boss:callback(dt, o, dx, dy)
     end
   end
 end
+
+function Boss:cleanUp()
+  HC:remove(self.box)
+end

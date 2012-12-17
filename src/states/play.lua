@@ -46,7 +46,6 @@ function Play:update(dt)
   if levels[iterator]:finished() then
     level:cleanUp()
     table.remove(levels, 1)
-    level = nil
     level = levels[1]
   end
   HC:update(dt)

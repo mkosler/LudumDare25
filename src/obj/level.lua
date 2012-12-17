@@ -75,12 +75,9 @@ function Level:draw()
 end
 
 function Level:cleanUp()
-  self.map = nil
-  self.door = nil
+  for _,v in pairs(self.map) do v:cleanUp() end
+  self.door:cleanUp()
   self.bag:cleanUp()
-  self.bag = nil
-  self.script = nil
-  self = nil
 end
 
 function Level:keypressed(key, code)
