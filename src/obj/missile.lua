@@ -1,41 +1,42 @@
-local Missile = Class('Missile')
-function Missile:initialize(x, y, dmg, img)
-  self.x = x
-  self.y = y
-  self.damage = dmg
+Missile = class('Missile')
+function Missile:initialize(x, y, velocity, damage, img)
+  self.box = HC:addRectangle(x, y, img:getWidth(), img:getHeight())
+  HC:addToGroup('level', self.box)
+  HC:addToGroup('missile', self.box)
+  HC:setPassive(self.box)
+  self.box.parent = self
+  self.name = 'Missile'
   self.image = img
+  self.velocity = velocity
+  self.damage = damage
+  self.removable = false
 end
 
 function Missile:draw()
-  love.graphics.draw(self.image, self.x, self.y)
+  local l, t = self.box:bbox()
+  love.graphics.draw(self.image, l, t)
 end
 
-local arrowImage    = love.graphics.newImage('assets/arrow.png')
-local fireballImage = love.graphics.newImage('assets/fireball.png')
-
-Arrow = Class('Arrow', Missile)
-function Arrow:initialize(x, y, dmg, speed, angle)
-  Arrow.initialize(self, x, y, dmg, arrowImage)
-  angle = angle * math.pi / 180.0
-  self.velocity = { x = speed * math.cos(angle), y = speed * math.sin(angle) }
+local arrowImage = love.graphics.newImage('assets/arrow.png')
+Arrow = class('Arrow', Missile)
+function Arrow:initialize(x, y, velocity, damage)
+  Missile.initialize(self, x, y, velocity, damage, arrowImage)
 end
-
-local GRAVITY = 0.1
 
 function Arrow:update(dt)
-  self.velocity.y = self.velocity.y - GRAVITY
-  self.x = self.x + (self.velocity.x * dt)
-  self.y = self.y + (self.velocity.y * dt)
+  if self.removable then return end
+
+  local l, t, r, b = self.box:bbox()
+  if l < 0 or r > love.graphics.getWidth() or t < 0 or b > love.graphics.getHeight() then
+    self.removable = true
+    return
+  end
+
+  self.box:move(self.velocity.x * dt, self.velocity.y * dt)
 end
 
-Fireball = Class('Fireball', Missile)
-function Fireball:initialize(x, y, dmg, speed, angle)
-  Missile.construct(self, x, y, dmg, fireballImage)
-  angle = angle * math.pi / 180.0
-  self.velocity = { x = speed * math.cos(angle), y = speed * math.sin(angle) }
-end
-
-function Fireball:update(dt)
-  self.x = self.x + (self.velocity.x * dt)
-  self.y = self.y + (self.velocity.y * dt)
+local fireballImage = love.graphics.newImage('assets/fireball.png')
+Fireball = class('Fireball', Missile)
+function Fireball:initialize(x, y, velocity, damage)
+  Missile.initialize(self, x, y, velocity, damage, fireballImage)
 end
