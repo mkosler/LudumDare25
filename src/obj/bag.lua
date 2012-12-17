@@ -3,7 +3,7 @@ function Bag:initialize(tbl)
   self.boss = tbl.boss
   self.objects = {}
   self.bodies = {}
-  self.missiles = {}
+  self.attacks = {}
 
   for _,v in pairs(tbl) do
     if instanceOf(Boss, v) then
@@ -28,9 +28,9 @@ function Bag:add(o)
   elseif instanceOf(Dead, o) then
     print('Adding to bodies...')
     table.insert(self.bodies, o)
-  elseif instanceOf(Missile, o) then
+  elseif instanceOf(Attack, o) then
     print('Adding to missiles...')
-    table.insert(self.missiles, o)
+    table.insert(self.attacks, o)
   else
     print('Adding to objects...')
     table.insert(self.objects, o)
@@ -40,6 +40,7 @@ end
 function Bag:cleanTable(tbl)
   for i,v in ipairs(tbl) do
     if v.removable then
+      print('Cleaned object', v.name)
       HC:remove(v.box)
       table.remove(tbl, i)
     end
@@ -47,9 +48,7 @@ function Bag:cleanTable(tbl)
 end
 
 function Bag:updateTable(dt, tbl)
-  for _,v in pairs(tbl) do
-    self:add(v:update(dt, self.boss))
-  end
+  for _,v in pairs(tbl) do self:add(v:update(dt, self.boss)) end
 end
 
 function Bag:drawTable(tbl)
@@ -57,20 +56,19 @@ function Bag:drawTable(tbl)
 end
 
 function Bag:update(dt)
-  --print(self.boss)
-  self.boss:update(dt)
+  self:add(self.boss:update(dt))
   self:updateTable(dt, self.objects)
-  self:updateTable(dt, self.missiles)
+  self:updateTable(dt, self.attacks)
   self:updateTable(dt, self.bodies)
 
   self:cleanTable(self.objects)
-  self:cleanTable(self.missiles)
+  self:cleanTable(self.attacks)
 end
 
 function Bag:draw()
   self.boss:draw()
   self:drawTable(self.objects)
-  self:drawTable(self.missiles)
+  self:drawTable(self.attacks)
   self:drawTable(self.bodies)
 end
 

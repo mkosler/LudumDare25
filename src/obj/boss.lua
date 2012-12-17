@@ -33,6 +33,11 @@ function Boss:initialize(x, y, keys)
     velocity = { x = 0, y = 0 },
     throw = false
   }
+  self.facing = 'left'
+  self.timer = {
+    count = 0,
+    delay = 0.1
+  }
 end
 
 function Boss:respond(dt)
@@ -51,11 +56,15 @@ function Boss:respond(dt)
       -- Throwing
       print('Throwing!')
       self.inHand.flags.thrown = true
+      self.inHand.flags.angle = self.angle
+      self.inHand = nil
     end
   else
     if self.flags.left then
+      self.facing = 'left'
       self.velocity.x = math.max(self.velocity.x - 1.0, -self.velocity.maxX)
     elseif self.flags.right then
+      self.facing = 'right'
       self.velocity.x = math.min(self.velocity.x + 1.0, self.velocity.maxX)
     end
   end
@@ -84,6 +93,19 @@ function Boss:update(dt)
   self.box:move(self.velocity.x, self.velocity.y)
 
   self.previous.y = t
+
+  self.timer.count = self.timer.count + dt
+  if self.flags.attack and self.timer.count >= self.timer.delay then
+    print('Attack!!!')
+    self.timer.count = 0
+    if self.facing == 'left' then
+      return Slash:new(10, self, true, slashImage)
+    elseif self.facing == 'right' then
+      return Slash:new(10, self, true, slashImage)
+    end
+  else
+    return nil
+  end
 end
 
 function Boss:draw()
@@ -121,4 +143,27 @@ end
 function Boss:__tostring()
   local l, t = self.box:bbox()
   return string.format('Boss: (%d, %d)', l, t)
+end
+
+function Boss:callback(dt, o, dx, dy)
+  if instanceOf(CollisionBlock, o) or instanceOf(WallBlock, o) then
+    self.box:move(dx, dy)
+  elseif instanceOf(FloatingBlock, o) then
+    if self.velocity.y > 0 then
+      self.box:move(0, dy)
+    end
+  elseif instanceOf(Dead, o) then
+    if self.flags.throw then
+      self.inHand = o
+    else
+      self.inHand = nil
+    end
+  else
+    for _,v in pairs{ Arrow, Charge, Slash } do
+      if instanceOf(v, o) then
+        self.hp.current = self.hp.current - o.damage
+        o.removable = true
+      end
+    end
+  end
 end

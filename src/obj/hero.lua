@@ -1,10 +1,9 @@
-require 'src.obj.missile'
+require 'src.obj.attack'
 
 local Hero = class('Hero')
 function Hero:initialize(x, y, hp, armor, img)
   self.box = HC:addRectangle(x, y, img:getWidth(), img:getHeight())
   HC:addToGroup('hero', self.box)
-  HC:addToGroup('missile', self.box)
   self.box.parent = self
   self.image = img
   self.name = 'Hero'
@@ -15,24 +14,10 @@ function Hero:initialize(x, y, hp, armor, img)
   self.previous = { x = 0, y = 0 }
 end
 
---local function callback(dt, v1, v2, dx, dy)
-  --print(v1.parent.name, v2.parent.name)
-  --if v2.parent.name == 'RedirectBlock' then
-    --if dy == 0 then
-      --v1:move(dx, dy)
-      --v1.parent.velocity.x = -v1.parent.velocity.x
-    --end
-  --else
-    --v1:move(dx, dy)
-  --end
---end
-
 function Hero:attack(dt, boss)
 end
 
 function Hero:update(dt, boss)
-  --HC:setCallbacks(callback)
-
   local l, t, r, b = self.box:bbox()
   if t == self.previous.y then
     self.velocity.y = 0
@@ -60,6 +45,27 @@ function Hero:__tostring()
   return string.format('Hero: (%d, %d)', l, t)
 end
 
+function Hero:callback(dt, o, dx, dy)
+  if instanceOf(RedirectBlock, o) then
+    if self.velocity.x ~= 0 and (self.velocity.y - GRAVITY) == 0 then
+      self.box:move(dx, dy)
+      self.velocity.x = -self.velocity.x
+    end
+  elseif instanceOf(CollisionBlock, o) then
+    self.box:move(dx, dy)
+  elseif instanceOf(FloatingBlock, o) then
+    if self.velocity.y > 0 then
+      self.box:move(0, dy)
+    end
+  elseif instanceOf(WallBlock, o) then
+    self.box:move(dx, dy)
+    self.velocity.x = -self.velocity.x
+  elseif instanceOf(Slash, o) then
+    self.hp.current = self.hp.current - o.damage
+    o.removable = true
+  end
+end
+
 local rangerImage = love.graphics.newImage('assets/archer.png')
 Ranger = class('Ranger', Hero)
 function Ranger:initialize(x, y)
@@ -78,31 +84,91 @@ function Ranger:attack(dt, boss)
   return Arrow:new(x1, y1, { x = x2 - x1, y = y2 - y1 }, 3)
 end
 
-local berzekerImage = love.graphics.newImage('assets/berserker.png')
+local berzekerImage = love.graphics.newImage('assets/berzerker.png')
 Berzerker = class('Berzerker', Hero)
 function Berzerker:initialize(x, y)
   Hero.initialize(self, x, y, 150, 0.85, berzekerImage)
+  self.previous = {
+    y = 0
+  }
+  self.timer = {
+    count = 0,
+    delay = 1.5
+  }
+  self.facing = 'left'
 end
 
 function Berzerker:attack(dt, boss)
+  self.timer.count = self.timer.count + dt
+  if self.timer.count < self.timer.delay then return nil end
+  self.timer.count = 0
+
+  local l = self.box:bbox()
+  local bL = boss.box:bbox()
+
+  self.facing = l > bL and 'left' or 'right'
+
+  return Slash:new(15, self, false, slashImage)
+end
+
+function Berzerker:update(dt, boss)
+  local _,t = self.box:bbox()
+  if t == self.previous.y then self.velocity.y = -300 end
+
+  self.velocity.y = self.velocity.y + GRAVITY
+
+  self.box:move(self.velocity.x * dt, self.velocity.y * dt)
+
+  self.previous.y = t
+
+  return self:attack(dt, boss)
 end
 
 local knightImage = love.graphics.newImage('assets/knight.png')
 Knight = class('Knight', Hero)
 function Knight:initialize(x, y)
   Hero.initialize(self, x, y, 100, 0.5, knightImage)
+  self.heldAttack = nil
+  self.facing = 'left'
 end
 
 function Knight:attack(dt, boss)
+  local _,_,_, b = self.box:bbox()
+  local _,_,_,bB = boss.box:bbox()
+
+  if self.heldAttack == nil and math.floor(b) == math.floor(bB) then 
+    self.heldAttack = Charge:new(35, self, slashImage)
+  elseif self.heldAttack ~= nil and math.floor(b) ~= math.floor(bB) then
+    self.heldAttack.removable = true
+    self.heldAttack = nil
+  end
 end
 
-local mageImage = love.graphics.newImage('assets/mage.png')
-Mage = class('Mage', Hero)
-function Mage:initialize(x, y)
-  Hero.initialize(self, x, y, 50, 1.0, mageImage)
-end
+function Knight:update(dt, boss)
+  local l, t, r, b = self.box:bbox()
+  if t == self.previous.y then
+    self.velocity.y = 0
+  end
 
-function Mage:attack(dt, boss)
+  if self.velocity.x > 0 then
+    self.facing = 'right'
+  elseif self.velocity.x < 0 then
+    self.facing = 'left'
+  end
+
+  self.velocity.y = self.velocity.y + GRAVITY
+
+  self:attack(dt, boss)
+  if self.heldAttack ~= nil then
+    print('CHARGE!!!')
+    self.box:move(self.velocity.x * dt * 5, self.velocity.y * dt)
+  else
+    self.box:move(self.velocity.x * dt, self.velocity.y * dt)
+  end
+
+  self.previous.y = t
+
+  return self.heldAttack
 end
 
 local deadImage = love.graphics.newImage('assets/dead.png')
@@ -112,7 +178,8 @@ function Dead:initialize(x, y)
   self.velocity = { x = 0, y = 0 }
   self.name = 'Dead'
   self.flags = {
-    thrown = false
+    thrown = false,
+    angle = 0
   }
 end
 
@@ -121,16 +188,17 @@ function Dead:update(dt)
 
   if t == self.previous.y then self.velocity.y = 0 end
 
+  if self.flags.thrown then
+    print('Thrown!!!')
+    self.flags.thrown = false
+    local rad = self.flags.angle * math.pi / 180.0
+    self.velocity = { x = 250.0 * math.cos(rad), y = 250.0 * math.sin(rad) }
+  end
+
   if self.velocity.x > 0 then
     self.velocity.x = self.velocity.x - (FRICTION * dt)
   elseif self.velocity.x < 0 then
     self.velocity.x = self.velocity.x + (FRICTION * dt)
-  end
-
-  if self.flags.thrown then
-    print('Thrown!!!')
-    self.flags.thrown = false
-    self.velocity.y = -200
   end
 
   self.velocity.y = self.velocity.y + GRAVITY

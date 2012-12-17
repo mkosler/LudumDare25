@@ -9,6 +9,10 @@ local function buildMap(map)
         table.insert(m, CollisionBlock((c - 2) * 20, (r - 1) * 20))
       elseif map[r][c] == 2 then
         table.insert(m, RedirectBlock((c - 2) * 20, (r - 1) * 20))
+      elseif map[r][c] == 3 then
+        table.insert(m, FloatingBlock((c - 2) * 20, (r - 1) * 20))
+      elseif map[r][c] == 4 then
+        table.insert(m, WallBlock((c - 2) * 20, (r - 1) * 20))
       end
     end
   end
