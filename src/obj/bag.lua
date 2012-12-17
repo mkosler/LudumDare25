@@ -39,6 +39,7 @@ end
 function Bag:cleanObjects(tbl)
   for i,v in ipairs(tbl) do
     if v.removable then
+      print('Cleaned object', v.name)
       local l, t = v.box:bbox()
       HC:remove(v.box)
       table.remove(tbl, i)

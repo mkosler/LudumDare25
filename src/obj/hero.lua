@@ -4,7 +4,9 @@ local heroSlashImage = love.graphics.newImage('assets/hero_slash.png')
 
 local Hero = class('Hero')
 function Hero:initialize(x, y, hp, armor, img, deadImg)
-  self.box = HC:addRectangle(x, y, img:getWidth(), img:getHeight())
+  local l = x
+  local t = y + 20 - img:getHeight()
+  self.box = HC:addRectangle(l, t, img:getWidth(), img:getHeight())
   HC:addToGroup('hero', self.box)
   self.box.parent = self
   self.image = img
@@ -44,23 +46,26 @@ end
 function Hero:callback(dt, o, dx, dy)
   if instanceOf(RedirectBlock, o) then
     if self.velocity.x ~= 0 and (self.velocity.y - GRAVITY) == 0 then
-      self.box:move(dx * 2, dy)
+      self.box:move(dx * 4, dy)
       self.velocity.x = -self.velocity.x
     end
   elseif instanceOf(CollisionBlock, o) then
     self.box:move(dx, dy)
-  elseif instanceOf(FloatingBlock, o) then
+  elseif instanceOf(FloatingBlock, o) and not instanceOf(Dead, self) then
     if self.velocity.y > 0 then
       self.box:move(0, dy)
     end
   elseif instanceOf(WallBlock, o) then
-    self.box:move(dx * 2, dy)
+    self.box:move(dx * 4, dy)
     self.velocity.x = -self.velocity.x
   else
-    for _,v in pairs{ Slash, Throw } do
-      if instanceOf(v, o) then
-        self.hp.current = self.hp.current - o.damage
-        o.removable = true
+    if not instanceOf(Dead, self) then
+      for _,v in pairs{ Slash, Throw } do
+        if instanceOf(v, o) then
+          print('Hit hero with', o.name)
+          self.hp.current = self.hp.current - o.damage
+          o.removable = true
+        end
       end
     end
   end
@@ -155,7 +160,7 @@ function Berzerker:update(dt, boss)
   end
 
   local _,t = self.box:bbox()
-  if t == self.previous.y then self.velocity.y = -150 end
+  if t == self.previous.y then self.velocity.y = -200 end
 
   self.velocity.y = self.velocity.y + GRAVITY
 
@@ -250,7 +255,7 @@ function Dead:attack(dt)
   if self.flags.thrown then
     self.flags.thrown = false
     local rad = self.flags.angle * math.pi / 180.0
-    self.velocity = { x = 6.0 * math.cos(rad), y = 6.0 * math.sin(rad) }
+    self.velocity = { x = 600 * math.cos(rad), y = 600 * math.sin(rad) }
     return Throw:new(25, self, self.image)
   else
     return nil
@@ -270,8 +275,8 @@ function Dead:update(dt)
     self.velocity.x = self.velocity.x + FRICTION
   end
 
-  self.velocity.y = self.velocity.y + (GRAVITY * dt)
-  self.box:move(self.velocity.x, self.velocity.y)
+  self.velocity.y = self.velocity.y + GRAVITY
+  self.box:move(self.velocity.x * dt, self.velocity.y * dt)
 
   self.previous.y = t
 

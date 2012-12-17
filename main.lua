@@ -7,8 +7,8 @@ require 'lib.middleclass'
 Menu = require 'src.states.menu'
 
 -- Globals
-GRAVITY = 3.5
-FRICTION = 0.5
+GRAVITY = 9.5
+FRICTION = 5.0
 
 function love.load()
   math.randomseed(os.time())

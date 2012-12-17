@@ -5,6 +5,7 @@ require 'src.obj.door'
 local function buildMap(map)
   local m = {}
   local d = nil
+  local b = Bag:new{}
   for r = 1, #map do
     for c = 1, #map[r] do
       if map[r][c] == 1 then
@@ -17,10 +18,25 @@ local function buildMap(map)
         table.insert(m, WallBlock:new((c - 2) * 20, (r - 1) * 20))
       elseif map[r][c] == 5 then
         d = Door:new((c - 2) * 20, (r - 1) * 20)
+      elseif map[r][c] == 6 then
+        b:add(Ranger:new((c - 2) * 20, (r - 1) * 20))
+      elseif map[r][c] == 7 then
+        b:add(Berzerker:new((c - 2) * 20, (r - 1) * 20))
+      elseif map[r][c] == 8 then
+        b:add(Knight:new((c - 2) * 20, (r - 1) * 20))
+      elseif map[r][c] == 9 then
+        b:add(Boss:new((c - 2) * 20, (r - 1) * 20,
+        {
+          left = 'left',
+          right = 'right',
+          jump = ' ',
+          attack = 'a',
+          throw = 's'
+        }))
       end
     end
   end
-  return m, d
+  return m, d, b
 end
 
 local function splitScript(script)
@@ -37,9 +53,8 @@ local function splitScript(script)
 end
 
 Level = class('Level')
-function Level:initialize(map, bag, script)
-  self.map, self.door = buildMap(map)
-  self.bag = bag
+function Level:initialize(map, script)
+  self.map, self.door, self.bag = buildMap(map)
   self.script = splitScript(script)
   self.timer = {
     count = 0,
@@ -51,10 +66,12 @@ end
 function Level:update(dt)
   self.bag:update(dt)
 
-  self.timer.count = self.timer.count + dt
-  if self.timer.count >= self.timer.delay then
-    self.timer.count = 0
-    self.iterator = (self.iterator + 1) % #self.script
+  if self.script ~= nil then
+    self.timer.count = self.timer.count + dt
+    if self.timer.count >= self.timer.delay then
+      self.timer.count = 0
+      self.iterator = (self.iterator + 1) % #self.script
+    end
   end
 
   if #self.bag.objects == 0 then
@@ -71,7 +88,13 @@ function Level:draw()
   self.door:draw()
   self.bag:draw()
 
-  love.graphics.printf(self.script[self.iterator + 1], 10, 10, 100)
+  if self.script ~= nil then
+    love.graphics.printf(self.script[self.iterator + 1], 10, 10, 100)
+  end
+
+  if self.bag.boss.dead then
+    love.graphics.print('Press R to restart level', love.graphics.getWidth() / 2, 10)
+  end
 end
 
 function Level:cleanUp()

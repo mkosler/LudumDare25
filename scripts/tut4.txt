@@ -1,0 +1,4 @@
+Sometimes Rangers are in impossible to reach places. Or so they think!
+If you can kill any nearby heroes, you can toss their bodies up to the hard to reach spots!
+Walk to a body and hold S to aim; use the left and right arrow keys to change throwing angle.
+Release the S key to throw the body.

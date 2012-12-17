@@ -43,6 +43,7 @@ Slash = class('Slash', Attack)
 function Slash:initialize(damage, parent, boss, img)
   local l, t = parent.box:bbox()
   Attack.initialize(self, l, t, damage, boss, img)
+  self.name = 'Slash'
   self.parent = parent
   self.timer = {
     count = 0,
@@ -54,7 +55,7 @@ function Slash:update(dt)
   local l, t, r = self.parent.box:bbox()
   local _,cY = self.parent.box:center()
   if self.parent:getFacing() == 'left' then
-    self.box:moveTo(l + (self.image:getWidth() / 2.0) - 1, cY)
+    self.box:moveTo(l - (self.image:getWidth() / 2.0) - 1, cY)
   elseif self.parent:getFacing() == 'right' then
     self.box:moveTo(r + (self.image:getWidth() / 2.0) + 1, cY)
   end
@@ -69,7 +70,7 @@ end
 function Slash:draw()
   local l, t = self.box:bbox()
   if self.parent:getFacing() == 'left' then
-    love.graphics.draw(self.image, l, t, 0, -1, 1)
+    love.graphics.draw(self.image, l, t, 0, -1, 1, self.image:getWidth())
   elseif self.parent:getFacing() == 'right' then
     love.graphics.draw(self.image, l, t)
   end
@@ -92,7 +93,7 @@ function Charge:update(dt)
   local l, t, r = self.parent.box:bbox()
   local _,cY = self.parent.box:center()
   if self.parent:getFacing() == 'left' then
-    self.box:moveTo(l + (self.image:getWidth() / 2.0) - 1, cY)
+    self.box:moveTo(l - (self.image:getWidth() / 2.0) - 1, cY)
   elseif self.parent:getFacing() == 'right' then
     self.box:moveTo(r + (self.image:getWidth() / 2.0) + 1, cY)
   end
@@ -101,7 +102,7 @@ end
 function Charge:draw()
   local l, t = self.box:bbox()
   if self.parent:getFacing() == 'left' then
-    love.graphics.draw(self.image, l, t, 0, -1, 1)
+    love.graphics.draw(self.image, l, t, 0, -1, 1, self.image:getWidth())
   elseif self.parent:getFacing() == 'right' then
     love.graphics.draw(self.image, l, t)
   end
@@ -111,6 +112,7 @@ Throw = class('Throw', Attack)
 function Throw:initialize(damage, parent, img)
   local l, t = parent.box:bbox()
   Attack.initialize(self, l, t, damage, true, img)
+  self.name = 'Throw'
   self.parent = parent
   self.previous = { cY = 0 }
 end

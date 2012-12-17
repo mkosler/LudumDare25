@@ -3,9 +3,10 @@ GUI = require 'lib.Quickie'
 
 -- States
 local Play = require 'src.states.play'
-local Tutorial = require 'src.states.tutorial'
 
 local Menu = GS.new()
+
+local titleImage = love.graphics.newImage('assets/title.png')
 
 function Menu:enter(prev)
 end
@@ -15,9 +16,6 @@ function Menu:update(dt)
   if GUI.Button{text = 'Play'} then
     GS.switch(Play)
   end
-  if GUI.Button{text = 'How To Play'} then
-    GS.switch(Tutorial)
-  end
   if GUI.Button{text = 'Exit'} then
     love.event.quit()
   end
@@ -26,6 +24,7 @@ end
 
 function Menu:draw()
   GUI.core.draw()
+  love.graphics.draw(titleImage, love.graphics.getWidth() / 4, love.graphics.getHeight() / 2)
 end
 
 function Menu:keypressed(key, code)

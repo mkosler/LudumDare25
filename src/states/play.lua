@@ -26,28 +26,30 @@ local function callback(dt, v1, v2, dx, dy)
   end
 end
 
-local levels = {}
 local level
 local iterator = 1
 
 function Play:enter(prev)
-  table.insert(levels, Level:new(maps[3], Bag:new{ Boss:new(20, 300, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Ranger:new(160, 300) }, 'scripts/tut1.txt'))
-  table.insert(levels, Level:new(maps[3], Bag:new{ Boss:new(20, 300, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Berzerker:new(160, 300) }, 'scripts/tut2.txt'))
-  table.insert(levels, Level:new(maps[3], Bag:new{ Boss:new(20, 300, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Knight:new(160, 300) }, 'scripts/tut3.txt'))
   love.graphics.setBackgroundColor(49, 79, 79)
 
-  level = levels[1]
+  level = Level:new(maps[iterator], 'scripts/tut' .. iterator .. '.txt')
 
   HC:setCallbacks(callback)
 end
 
+local function switchLevel(i)
+  level:cleanUp()
+  if iterator < 5 then
+    level = Level:new(maps[iterator], 'scripts/tut' .. iterator .. '.txt')
+  else
+    level = Level:new(maps[iterator])
+  end
+  return i
+end
+
 function Play:update(dt)
   level:update(dt)
-  if levels[iterator]:finished() then
-    level:cleanUp()
-    table.remove(levels, 1)
-    level = levels[1]
-  end
+  if level:finished() then iterator = switchLevel(iterator + 1) end
   HC:update(dt)
 end
 
@@ -57,6 +59,7 @@ function Play:draw()
 end
 
 function Play:keypressed(key, code)
+  if key == 'r' then iterator = switchLevel(iterator) end
   level:keypressed(key, code)
 end
 

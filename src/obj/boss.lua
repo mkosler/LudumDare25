@@ -5,7 +5,9 @@ local throwImage = love.graphics.newImage('assets/throw.png')
 local bossImage = love.graphics.newImage('assets/boss.png')
 Boss = class('Boss')
 function Boss:initialize(x, y, keys)
-  self.box = HC:addRectangle(x, y, bossImage:getWidth(), bossImage:getHeight())
+  local l = x
+  local t = y + 20 - bossImage:getHeight()
+  self.box = HC:addRectangle(l, t, bossImage:getWidth(), bossImage:getHeight())
   HC:addToGroup('boss', self.box)
   HC:addToGroup('redirect', self.box)
   self.box.parent = self
@@ -15,8 +17,8 @@ function Boss:initialize(x, y, keys)
   self.velocity = {
     x = 0,
     y = 0,
-    maxX = 5,
-    maxY = 3.75
+    maxX = 100,
+    maxY = 300
   }
   self.keys = keys
   self.flags = {
@@ -43,6 +45,7 @@ function Boss:initialize(x, y, keys)
     count = 0,
     delay = 0.1
   }
+  self.dead = false
 end
 
 function Boss:getFacing()
@@ -55,15 +58,15 @@ function Boss:respond(dt)
       if self.flags.left then
         -- Counter-clockwise
         self.angle = (self.angle - 5) % 360
-        print('Angle:', self.angle)
+        --print('Angle:', self.angle)
       elseif self.flags.right then
         -- Clockwise
         self.angle = (self.angle + 5) % 360
-        print('Angle:', self.angle)
+        --print('Angle:', self.angle)
       end
     else
       -- Throwing
-      print('Throwing!')
+      --print('Throwing!')
       self.inHand.flags.thrown = true
       self.inHand.flags.angle = self.angle
       self.inHand = nil
@@ -71,10 +74,10 @@ function Boss:respond(dt)
   else
     if self.flags.left then
       self.facing = 'left'
-      self.velocity.x = math.max(self.velocity.x - 1.0, -self.velocity.maxX)
+      self.velocity.x = math.max(self.velocity.x - 20, -self.velocity.maxX)
     elseif self.flags.right then
       self.facing = 'right'
-      self.velocity.x = math.min(self.velocity.x + 1.0, self.velocity.maxX)
+      self.velocity.x = math.min(self.velocity.x + 20, self.velocity.maxX)
     end
   end
 
@@ -91,6 +94,11 @@ function Boss:respond(dt)
 end
 
 function Boss:update(dt)
+  if self.hp.current <= 0 then
+    self.dead = true
+    return
+  end
+
   local l, t, r, b = self.box:bbox()
   if t == self.previous.y then self.velocity.y = 0 end
 
@@ -98,14 +106,14 @@ function Boss:update(dt)
 
   self.previous.velocity.y = self.velocity.y
 
-  self.velocity.y = self.velocity.y + (GRAVITY * dt)
-  self.box:move(self.velocity.x, self.velocity.y)
+  self.velocity.y = self.velocity.y + GRAVITY
+  self.box:move(self.velocity.x * dt, self.velocity.y * dt)
 
   self.previous.y = t
 
   self.timer.count = self.timer.count + dt
   if self.flags.attack and self.timer.count >= self.timer.delay then
-    print('Attack!!!')
+    --print('Attack!!!')
     self.timer.count = 0
     if self.facing == 'left' then
       return Slash:new(10, self, true, bossSlashImage)
@@ -132,7 +140,7 @@ function Boss:draw()
   if self.flags.throw and self.inHand ~= nil then
     local cX, cY = self.box:center()
     local rad = self.angle * math.pi / 180.0
-    print(cX, cY, throwImage:getWidth())
+    --print(cX, cY, throwImage:getWidth())
     love.graphics.draw(throwImage, cX, cY, rad, 1, 1, throwImage:getWidth() / 2, 0)
   end
 
@@ -174,7 +182,7 @@ function Boss:callback(dt, o, dx, dy)
     end
   elseif instanceOf(Door, o) then
     if o.openable then
-      print('Opening door...', self.name, o.name)
+      --print('Opening door...', self.name, o.name)
       o.opened = true
     end
   else
