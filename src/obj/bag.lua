@@ -1,6 +1,5 @@
 Bag = class('Bag')
 function Bag:initialize(tbl)
-  self.boss = tbl.boss
   self.objects = {}
   self.bodies = {}
   self.attacks = {}
@@ -90,4 +89,12 @@ end
 
 function Bag:keyreleased(key, code)
   self.boss:keyreleased(key, code)
+end
+
+function Bag:cleanUp()
+  self.boss = nil
+  self.objects = nil
+  self.attacks = nil
+  self.bodies = nil
+  self = nil
 end

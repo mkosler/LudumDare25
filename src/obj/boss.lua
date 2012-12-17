@@ -1,3 +1,6 @@
+local iterator = 0
+
+local bossSlashImage = love.graphics.newImage('assets/boss_slash.png')
 local throwImage = love.graphics.newImage('assets/throw.png')
 local bossImage = love.graphics.newImage('assets/boss.png')
 Boss = class('Boss')
@@ -6,7 +9,8 @@ function Boss:initialize(x, y, keys)
   HC:addToGroup('boss', self.box)
   HC:addToGroup('redirect', self.box)
   self.box.parent = self
-  self.name = 'Boss'
+  self.name = 'Boss ' .. iterator
+  iterator = iterator + 1
   self.image = bossImage
   self.velocity = {
     x = 0,
@@ -39,6 +43,10 @@ function Boss:initialize(x, y, keys)
     count = 0,
     delay = 0.1
   }
+end
+
+function Boss:getFacing()
+  return self.facing
 end
 
 function Boss:respond(dt)
@@ -100,9 +108,9 @@ function Boss:update(dt)
     print('Attack!!!')
     self.timer.count = 0
     if self.facing == 'left' then
-      return Slash:new(10, self, true, slashImage)
+      return Slash:new(10, self, true, bossSlashImage)
     elseif self.facing == 'right' then
-      return Slash:new(10, self, true, slashImage)
+      return Slash:new(10, self, true, bossSlashImage)
     end
   else
     return nil
@@ -111,7 +119,15 @@ end
 
 function Boss:draw()
   local l, t, r, b = self.box:bbox()
-  love.graphics.draw(self.image, l, t)
+  if self.facing == 'left' then
+    love.graphics.draw(self.image, l, t, 0, -1, 1, self.image:getWidth())
+  elseif self.facing == 'right' then
+    love.graphics.draw(self.image, l, t)
+  end
+
+  love.graphics.setColor(255,   0,   0)
+  love.graphics.rectangle('fill', l, t - 10, (r - l) * (self.hp.current / self.hp.max), 3)
+  love.graphics.setColor(255, 255, 255)
 
   if self.flags.throw and self.inHand ~= nil then
     local cX, cY = self.box:center()
@@ -120,9 +136,6 @@ function Boss:draw()
     love.graphics.draw(throwImage, cX, cY, rad, 1, 1, throwImage:getWidth() / 2, 0)
   end
 
-  love.graphics.setColor(255,   0,   0)
-  love.graphics.rectangle('fill', l, t - 10, (r - l) * (self.hp.current / self.hp.max), 3)
-  love.graphics.setColor(255, 255, 255)
 end
 
 function Boss:keypressed(key, code)
@@ -158,6 +171,11 @@ function Boss:callback(dt, o, dx, dy)
       self.inHand = o
     else
       self.inHand = nil
+    end
+  elseif instanceOf(Door, o) then
+    if o.openable then
+      print('Opening door...', self.name, o.name)
+      o.opened = true
     end
   else
     for _,v in pairs{ Arrow, Charge, Slash } do

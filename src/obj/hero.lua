@@ -1,5 +1,7 @@
 require 'src.obj.attack'
 
+local heroSlashImage = love.graphics.newImage('assets/hero_slash.png')
+
 local Hero = class('Hero')
 function Hero:initialize(x, y, hp, armor, img, deadImg)
   self.box = HC:addRectangle(x, y, img:getWidth(), img:getHeight())
@@ -14,11 +16,20 @@ function Hero:initialize(x, y, hp, armor, img, deadImg)
   self.timer = { count = 0, delay = 3 }
   self.previous = { x = 0, y = 0 }
   self.removable = false
+  self.facing = 'left'
+end
+
+function Hero:getFacing()
+  return self.facing
 end
 
 function Hero:draw()
   local l, t, r, b = self.box:bbox()
-  love.graphics.draw(self.image, l, t)
+  if self.facing == 'left' then
+    love.graphics.draw(self.image, l, t)
+  elseif self.facing == 'right' then
+    love.graphics.draw(self.image, l, t, 0, -1, 1, self.image:getWidth())
+  end
 
   love.graphics.setColor(255,   0,   0)
   love.graphics.rectangle('fill', l, t - 10, (r - l) * (self.hp.current / self.hp.max), 3)
@@ -85,6 +96,12 @@ function Ranger:update(dt, boss)
     self.velocity.y = 0
   end
 
+  if self.velocity.x < 0 then
+    self.facing = 'left'
+  elseif self.velocity.x > 0 then
+    self.facing = 'right'
+  end
+
   self.velocity.y = self.velocity.y + GRAVITY
   self.box:move(self.velocity.x * dt, self.velocity.y * dt)
 
@@ -105,7 +122,11 @@ function Berzerker:initialize(x, y)
     count = 0,
     delay = 1.5
   }
-  self.facing = 'left'
+  self.swingFacing = 'left'
+end
+
+function Berzerker:getFacing()
+  return self.swingFacing
 end
 
 function Berzerker:attack(dt, boss)
@@ -116,9 +137,15 @@ function Berzerker:attack(dt, boss)
   local l = self.box:bbox()
   local bL = boss.box:bbox()
 
-  self.facing = l > bL and 'left' or 'right'
+  if self.velocity.x < 0 then
+    self.facing = 'left'
+  elseif self.velocity.x > 0 then
+    self.facing = 'right'
+  end
 
-  return Slash:new(15, self, false, slashImage)
+  self.swingFacing = l > bL and 'left' or 'right'
+
+  return Slash:new(15, self, false, heroSlashImage)
 end
 
 function Berzerker:update(dt, boss)
@@ -128,7 +155,7 @@ function Berzerker:update(dt, boss)
   end
 
   local _,t = self.box:bbox()
-  if t == self.previous.y then self.velocity.y = -300 end
+  if t == self.previous.y then self.velocity.y = -150 end
 
   self.velocity.y = self.velocity.y + GRAVITY
 
@@ -145,7 +172,6 @@ Knight = class('Knight', Hero)
 function Knight:initialize(x, y)
   Hero.initialize(self, x, y, 100, 0.5, knightImage, knightDeadImage)
   self.heldAttack = nil
-  self.facing = 'left'
   self.newAttack = false
   self.timer = {
     count = 2.0,
@@ -165,7 +191,7 @@ function Knight:attack(dt, boss)
 
   if self.heldAttack == nil and math.floor(b) == math.floor(bB) then 
     self.newAttack = true
-    self.heldAttack = Charge:new(35, self, slashImage)
+    self.heldAttack = Charge:new(35, self, heroSlashImage)
   elseif self.heldAttack ~= nil and math.floor(b) ~= math.floor(bB) then
     self.heldAttack.removable = true
     self.heldAttack = nil
@@ -222,10 +248,9 @@ end
 
 function Dead:attack(dt)
   if self.flags.thrown then
-    print('Thrown!!!')
     self.flags.thrown = false
     local rad = self.flags.angle * math.pi / 180.0
-    self.velocity = { x = 4.5 * math.cos(rad), y = 4.5 * math.sin(rad) }
+    self.velocity = { x = 6.0 * math.cos(rad), y = 6.0 * math.sin(rad) }
     return Throw:new(25, self, self.image)
   else
     return nil

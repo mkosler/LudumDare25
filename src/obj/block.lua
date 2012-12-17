@@ -16,10 +16,9 @@ function Block:draw()
   love.graphics.draw(self.image, l, t)
 end
 
-local collideBlockImage = love.graphics.newImage('assets/collideBlock.png')
 CollisionBlock = class('CollisionBlock', Block)
 function CollisionBlock:initialize(x, y)
-  Block.initialize(self, x, y, collideBlockImage)
+  Block.initialize(self, x, y, blockImage)
   self.name = 'CollisionBlock'
 end
 

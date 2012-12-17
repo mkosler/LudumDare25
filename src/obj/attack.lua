@@ -39,7 +39,6 @@ function Arrow:draw()
   love.graphics.draw(self.image, l, t, self.angle)
 end
 
-slashImage = love.graphics.newImage('assets/slash.png')
 Slash = class('Slash', Attack)
 function Slash:initialize(damage, parent, boss, img)
   local l, t = parent.box:bbox()
@@ -54,9 +53,9 @@ end
 function Slash:update(dt)
   local l, t, r = self.parent.box:bbox()
   local _,cY = self.parent.box:center()
-  if self.parent.facing == 'left' then
+  if self.parent:getFacing() == 'left' then
     self.box:moveTo(l + (self.image:getWidth() / 2.0) - 1, cY)
-  elseif self.parent.facing == 'right' then
+  elseif self.parent:getFacing() == 'right' then
     self.box:moveTo(r + (self.image:getWidth() / 2.0) + 1, cY)
   end
 
@@ -69,9 +68,9 @@ end
 
 function Slash:draw()
   local l, t = self.box:bbox()
-  if self.parent.facing == 'left' then
+  if self.parent:getFacing() == 'left' then
     love.graphics.draw(self.image, l, t, 0, -1, 1)
-  elseif self.parent.facing == 'right' then
+  elseif self.parent:getFacing() == 'right' then
     love.graphics.draw(self.image, l, t)
   end
 end
@@ -84,20 +83,26 @@ function Charge:initialize(damage, parent, img)
 end
 
 function Charge:update(dt)
+  if self.parent.removable then
+    print('How am I alive?')
+    self.removable = true
+    return
+  end
+
   local l, t, r = self.parent.box:bbox()
   local _,cY = self.parent.box:center()
-  if self.parent.facing == 'left' then
+  if self.parent:getFacing() == 'left' then
     self.box:moveTo(l + (self.image:getWidth() / 2.0) - 1, cY)
-  elseif self.parent.facing == 'right' then
+  elseif self.parent:getFacing() == 'right' then
     self.box:moveTo(r + (self.image:getWidth() / 2.0) + 1, cY)
   end
 end
 
 function Charge:draw()
   local l, t = self.box:bbox()
-  if self.parent.facing == 'left' then
+  if self.parent:getFacing() == 'left' then
     love.graphics.draw(self.image, l, t, 0, -1, 1)
-  elseif self.parent.facing == 'right' then
+  elseif self.parent:getFacing() == 'right' then
     love.graphics.draw(self.image, l, t)
   end
 end

@@ -3,6 +3,7 @@ local Play = GS.new()
 require 'src.obj.hero'
 require 'src.obj.level'
 require 'src.obj.boss'
+require 'src.obj.bag'
 
 local maps = require 'src.maps'
 local level
@@ -25,18 +26,29 @@ local function callback(dt, v1, v2, dx, dy)
   end
 end
 
+local levels = {}
+local level
+local iterator = 1
+
 function Play:enter(prev)
-  level = Level(maps[2], Bag{ Boss:new(20, 100, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Ranger:new(160, 100), Knight:new(160, 200) } )
-  --level = Level(maps[2], Bag{ Boss:new(20, 100, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Ranger:new(160, 100) })
-  --level = Level(maps[3], Bag{ Boss:new(20, 200, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Knight:new(160, 200) })
-  --level = Level(maps[3], Bag{ Boss:new(20, 200, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }) })
-  love.graphics.setBackgroundColor(175, 238, 238)
+  table.insert(levels, Level:new(maps[3], Bag:new{ Boss:new(20, 300, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Ranger:new(160, 300) }, 'scripts/tut1.txt'))
+  table.insert(levels, Level:new(maps[3], Bag:new{ Boss:new(20, 300, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Berzerker:new(160, 300) }, 'scripts/tut2.txt'))
+  table.insert(levels, Level:new(maps[3], Bag:new{ Boss:new(20, 300, { left = 'left', right = 'right', jump = ' ', attack = 'a', throw = 's' }), Knight:new(160, 300) }, 'scripts/tut3.txt'))
+  love.graphics.setBackgroundColor(49, 79, 79)
+
+  level = levels[1]
 
   HC:setCallbacks(callback)
 end
 
 function Play:update(dt)
   level:update(dt)
+  if levels[iterator]:finished() then
+    level:cleanUp()
+    table.remove(levels, 1)
+    level = nil
+    level = levels[1]
+  end
   HC:update(dt)
 end
 
